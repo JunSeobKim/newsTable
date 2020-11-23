@@ -20,7 +20,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     // 3. tableView 데이터 매칭
     // 4. 통보 getNews가 백그라운드에서 돌고있기 때문에 비동기로 Main에 reload 해줘야 함
     func getNews() {
-        let task = URLSession.shared.dataTask(with: URL(string: "https://newsapi.org/v2/top-headlines?country=kr&apiKey=APIKEY")!) { (data, response, error) in
+        let task = URLSession.shared.dataTask(with: URL(string: "https://newsapi.org/v2/top-headlines?country=kr&apiKey=")!) { (data, response, error) in
             if let dataJson = data {
                 do {
                     // json parsing
@@ -39,10 +39,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                     }
                 }
                 catch {}
-                
-                
             }
-            
         }
         task.resume()
     }
@@ -83,10 +80,52 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return cell
     }
     
-    // 클릭
+    
+    
+    // 클릭 2-1
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("CLICK : \(indexPath.row)")
+        
+        let storyboard = UIStoryboard.init(name: "Main", bundle: nil)
+        let newsDetail = storyboard.instantiateViewController(identifier: "NewsDetailController") as! NewsDetailController
+        
+        if let news = newsData {
+            if let newsImage = news[indexPath.row]["urlToImage"] as? String {
+                newsDetail.imageUrl = newsImage
+            }
+            if let newsDesc = news[indexPath.row]["description"] as? String {
+                newsDetail.desc = newsDesc
+            }
+        }
+        
+        // 이동 (수동)
+//        showDetailViewController(newsDetail, sender: nil)
     }
+    
+    
+    // 1. 디테일(상세) 화면 만들기
+    // 2. 값 보내기
+    // 2-1 tableview delegate / 2-2 storyboard (segue)
+    // 3. 화면 이동 ( 이동하기 전에 값을 미리 세팅해야함 )
+    
+    // 2-2 segue
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let id = segue.identifier, "NewsDetailSegue" == id {
+            if let newsDetail = segue.destination as? NewsDetailController {
+                if let index = TableViewMain.indexPathForSelectedRow {
+                    if let news = newsData {
+                        if let newsImage = news[index.row]["urlToImage"] as? String {
+                            newsDetail.imageUrl = newsImage
+                        }
+                        if let newsDesc = news[index.row]["description"] as? String {
+                            newsDetail.desc = newsDesc
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     
 
     override func viewDidLoad() {
